@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <background>
+        <action text="view environments" type="open" file="cmd.exe" parameter="/k set"/>
+        <action text="open cmd here" type="open" file="cmd.exe" parameter="/k cd /d ${CTXMENU_PWD}"/>
+        <action text="open cmd(admin) here" type="runas" file="cmd.exe" parameter="/k cd /d ${CTXMENU_PWD}"/>
+        <separator/>
+        <menu text="websites">
+            <action text="google" type="open" file="https://www.google.com"/>
+            <action text="github" type="open" file="https://github.com/"/>
+        </menu>
+    </background>
+</root>

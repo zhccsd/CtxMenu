@@ -82,5 +82,6 @@ install(TARGETS CtxMenuDLL
 install(FILES
     scripts/install.bat
     scripts/uninstall.bat
+    samples/sample.xml
     DESTINATION bin
 )
