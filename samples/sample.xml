@@ -11,8 +11,8 @@
         </menu>
         <separator/>
         <menu text="directories">
-            <action text="LOCALAPPDATA" type="open" file="%LOCALAPPDATA%" icon="exeIcon:C:\Windows\explorer.exe"/>
-            <action text="APPDATA" type="open" file="%APPDATA%" icon="exeIcon:C:\Windows\explorer.exe"/>
+            <action text="LOCALAPPDATA" type="open" file="%LOCALAPPDATA%" icon="exeIcon:imageres.dll@-1023"/>
+            <action text="APPDATA" type="open" file="%APPDATA%" icon="exeIcon:explorer.exe"/>
         </menu>
     </background>
 </root>

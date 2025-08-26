@@ -18,69 +18,108 @@ IconManager::~IconManager()
 
 HBITMAP IconManager::getHBitmapFromPattern(const std::wstring& pattern)
 {
-    // exeIcon:exeFilePath
+    // exeIcon:exeFilePath@index
     const std::wstring exeIconPrefix = L"exeIcon:";
     if (pattern.find(exeIconPrefix, 0) == 0)
     {
-        std::wstring exePath = pattern.substr(exeIconPrefix.size());
-        return _getHBitmapFromExeIcon(exePath);
+        std::wstring exePattern = pattern.substr(exeIconPrefix.size());
+        return _getHBitmapFromExeIcon(exePattern);
     }
     return NULL;
 }
 
-HBITMAP IconManager::_getHBitmapFromExeIcon(const std::wstring& exePath)
+HBITMAP IconManager::_getHBitmapFromExeIcon(const std::wstring& pattern)
 {
-    if (exePath.empty())
+    if (pattern.empty())
     {
         return NULL;
     }
-    if (!_cacheExeIcon(exePath))
+    if (!_cacheExeIcon(pattern))
     {
         return NULL;
     }
-    return _loadHBitmapFromCache(exePath);
+    return _loadHBitmapFromIconCache(pattern);
 }
 
-bool IconManager::_cacheExeIcon(const std::wstring& exePath)
+bool IconManager::_cacheExeIcon(const std::wstring& pattern)
 {
-    auto iter = _iconCacheMap.find(exePath);
+    auto iter = _iconCacheMap.find(pattern);
     if (iter != _iconCacheMap.end())
     {
         return true;
     }
+    std::wstring exePath = pattern;
+    int iconIndex = 0;
+    auto atPos = pattern.find_last_of(L'@');
+    if (atPos != std::wstring::npos)
+    {
+        std::wstring indexStr = pattern.substr(atPos + 1);
+        exePath = pattern.substr(0, atPos);
+        try
+        {
+            iconIndex = std::stoi(indexStr.c_str());
+        }
+        catch (...)
+        {
+            iconIndex = 0;
+        }
+    }
     UINT iconCount = ExtractIconExW(exePath.c_str(), -1, NULL, NULL, 0);
     if (iconCount == 0)
     {
+        _iconCacheMap[pattern] = { NULL, 0, 0 };
         return false;
     }
+    if (iconCount > 99999)
+    {
+        _iconCacheMap[pattern] = { NULL, 0, 0 };
+        return false;
+    }
+    if (iconIndex >= static_cast<int>(iconCount))
+    {
+        iconIndex = 0;
+    }
+    if (iconIndex < 0)
+    {
+        /*
+        * from MS Learn:
+        * If this value is a negative number and either phiconLarge or phiconSmall is not NULL,
+        * the function begins by extracting the icon whose resource identifier is equal to the absolute value of nIconIndex.
+        * For example, use -3 to extract the icon whose resource identifier is 3.
+        * 
+        * so negative index is ok, and makes it even easier to find icons in shell32.dll and imageres.dll
+        */
+        //iconIndex = 0;
+    }
     HICON hSmallIcon = NULL;
-    ExtractIconExW(exePath.c_str(), 0, NULL, &hSmallIcon, 1);
+    ExtractIconExW(exePath.c_str(), iconIndex, NULL, &hSmallIcon, 1);
     if (!hSmallIcon)
     {
+        _iconCacheMap[pattern] = { NULL, 0, 0 };
         return false;
     }
     ICONINFO iconInfo = { 0 };
     if (!GetIconInfo(hSmallIcon, &iconInfo))
     {
         DestroyIcon(hSmallIcon);
-        _iconCacheMap[exePath] = { NULL, 0, 0 };
+        _iconCacheMap[pattern] = { NULL, 0, 0 };
         return false;
     }
     if (!iconInfo.hbmColor)
     {
         DestroyIcon(hSmallIcon);
-        _iconCacheMap[exePath] = { NULL, 0, 0 };
+        _iconCacheMap[pattern] = { NULL, 0, 0 };
         return false;
     }
     BITMAP bm;
     GetObject(iconInfo.hbmColor, sizeof(bm), &bm);
-    _iconCacheMap[exePath] = { hSmallIcon, bm.bmWidth, bm.bmHeight };
+    _iconCacheMap[pattern] = { hSmallIcon, bm.bmWidth, bm.bmHeight };
     return true;
 }
 
-HBITMAP IconManager::_loadHBitmapFromCache(const std::wstring& exePath)
+HBITMAP IconManager::_loadHBitmapFromIconCache(const std::wstring& pattern)
 {
-    auto iter = _iconCacheMap.find(exePath);
+    auto iter = _iconCacheMap.find(pattern);
     if (iter == _iconCacheMap.end())
     {
         return NULL;

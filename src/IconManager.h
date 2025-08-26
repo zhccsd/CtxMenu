@@ -10,9 +10,9 @@ public:
     HBITMAP getHBitmapFromPattern(const std::wstring& pattern);
 
 private:
-    HBITMAP _getHBitmapFromExeIcon(const std::wstring& exePath);
-    bool _cacheExeIcon(const std::wstring& exePath);
-    HBITMAP _loadHBitmapFromCache(const std::wstring& exePath);
+    HBITMAP _getHBitmapFromExeIcon(const std::wstring& pattern);
+    bool _cacheExeIcon(const std::wstring& pattern);
+    HBITMAP _loadHBitmapFromIconCache(const std::wstring& pattern);
     HBITMAP _hIconToBitmapWithAlpha(HICON hIcon, int width, int height);
 
 private:
