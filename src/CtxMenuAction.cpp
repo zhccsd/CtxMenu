@@ -52,6 +52,16 @@ CtxMenuAction::ActionType CtxMenuAction::actionType() const
     return Unknown;
 }
 
+std::wstring CtxMenuAction::iconPattern() const
+{
+    auto iter = _params.find("icon");
+    if (iter != _params.end() && !iter->second.empty())
+    {
+        return iter->second;
+    }
+    return std::wstring();
+}
+
 bool CtxMenuAction::execute() const
 {
     ActionType actionType = this->actionType();

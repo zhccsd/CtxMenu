@@ -22,6 +22,7 @@ public:
     ~CtxMenuAction();
     static CtxMenuAction parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections);
     ActionType actionType() const;
+    std::wstring iconPattern() const;
     bool execute() const;
 
 private:

@@ -1,6 +1,7 @@
 #ifndef CTXMENU_H
 #define CTXMENU_H
 #include "CtxMenuAction.h"
+#include "IconManager.h"
 
 class CtxMenu
 {
@@ -30,6 +31,7 @@ private:
     TargetType _targetType = TargetType::Unknown;
     std::vector<std::wstring> _selections;
     std::map<WORD, CtxMenuAction> _actions;
+    std::unique_ptr<IconManager> _iconManager;
 };
 
 #endif

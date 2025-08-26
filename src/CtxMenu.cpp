@@ -4,6 +4,7 @@
 
 CtxMenu::CtxMenu()
 {
+    _iconManager = std::make_unique<IconManager>();
 }
 
 CtxMenu::~CtxMenu()
@@ -290,6 +291,11 @@ bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& tex
     mii.fState = MFS_ENABLED;
     StringCchPrintfW(gInstance->GetPathBuffer(), gInstance->GetPathBufferSize(), text.c_str());
     mii.dwTypeData = gInstance->GetPathBuffer();
+    mii.hbmpItem = _iconManager->getHBitmapFromPattern(action.iconPattern());
+    if (mii.hbmpItem)
+    {
+        mii.fMask |= MIIM_BITMAP;
+    }
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
         return false;
