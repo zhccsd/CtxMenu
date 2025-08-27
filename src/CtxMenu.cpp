@@ -126,6 +126,16 @@ HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, U
     {
         return nullptr;
     }
+    tinyxml2::XMLElement* varElement = rootElement->FirstChildElement("var");
+    while (varElement)
+    {
+        const char* nameAttr = varElement->Attribute("name");
+        std::wstring name = nameAttr ? gInstance->Utf8ToUtf16(nameAttr) : L"";
+        const char* valueAttr = varElement->Attribute("value");
+        std::wstring value = valueAttr ? gInstance->Utf8ToUtf16(valueAttr) : L"";
+        CtxMenuAction::registerUserVariable(name, value);
+        varElement = varElement->NextSiblingElement("var");
+    }
     tinyxml2::XMLElement* menuElement = nullptr;
     switch (_targetType)
     {

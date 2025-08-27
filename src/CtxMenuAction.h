@@ -24,6 +24,7 @@ public:
     ActionType actionType() const;
     std::wstring iconPattern() const;
     bool execute() const;
+    static bool registerUserVariable(const std::wstring& name, const std::wstring& value);
 
 private:
     bool _execOpen(const std::wstring& file, const std::wstring& parameter = L"", int show = SW_SHOWNORMAL) const;
@@ -32,11 +33,13 @@ private:
 
 private:
     static void _replaceVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections);
+    static void _replaceUserVariables(std::wstring& str);
     static void _replaceEnvironmentVariables(std::wstring& str);
     static void _replaceCtxMenuVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections);
 
 private:
     std::map<std::string, std::wstring> _params;
+    static std::map<std::wstring, std::wstring> _userVariables;
 };
 
 #endif

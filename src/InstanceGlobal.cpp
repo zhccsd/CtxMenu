@@ -206,18 +206,21 @@ std::wstring InstanceGlobal::Utf8ToUtf16(const std::string& str) const
     return wstrTo;
 }
 
-void InstanceGlobal::StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const
+int InstanceGlobal::StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const
 {
     if (oldValue.empty())
     {
-        return;
+        0;
     }
+    int replacement = 0;
     size_t pos = 0;
     while ((pos = str.find(oldValue, pos)) != std::wstring::npos)
     {
         str.replace(pos, oldValue.length(), newValue);
         pos += newValue.length();
+        replacement++;
     }
+    return replacement;
 }
 
 bool InstanceGlobal::_getModulePath(HMODULE hModule, size_t bufferSize, std::wstring& result) const

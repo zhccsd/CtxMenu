@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root>
+    <var name="VS2022_EXE_PATH" value="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"/>
     <background>
         <action text="view environments" type="open" file="cmd.exe" parameter="/k set" icon="exeIcon:cmd.exe"/>
         <action text="open cmd here" type="open" file="cmd.exe" parameter="/k cd /d ${CTXMENU_PWD}" icon="exeIcon:cmd.exe"/>
         <action text="open cmd(admin) here" type="runas" file="cmd.exe" parameter="/k cd /d ${CTXMENU_PWD}" icon="exeIcon:cmd.exe"/>
+        <action text="my vcproject" type="open" file="just_for_test.sln" icon="exeIcon:$${VS2022_EXE_PATH}"/>
         <separator/>
         <menu text="websites">
             <action text="google" type="open" file="https://www.google.com" icon="exeIcon:C:\Program Files\Google\Chrome\Application\chrome.exe"/>

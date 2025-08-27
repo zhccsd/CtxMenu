@@ -12,6 +12,7 @@
 #include <memory>
 #include <atomic>
 #include <map>
+#include <set>
 #include <functional>
 #include "GlobalDef.h"
 #include "Logger.h"
@@ -49,7 +50,7 @@ public:
 
     // utility functions
     std::wstring Utf8ToUtf16(const std::string& str) const;
-    void StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const;
+    int StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const;
 
 private:
     bool _getModulePath(HMODULE hModule, size_t bufferSize, std::wstring& result) const;

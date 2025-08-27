@@ -1,5 +1,7 @@
 #include "CtxMenuAction.h"
 
+std::map<std::wstring, std::wstring> CtxMenuAction::_userVariables;
+
 CtxMenuAction::CtxMenuAction(const std::map<std::string, std::wstring>& params)
     : _params(params)
 {
@@ -121,6 +123,20 @@ bool CtxMenuAction::execute() const
     return false;
 }
 
+bool CtxMenuAction::registerUserVariable(const std::wstring& name, const std::wstring& value)
+{
+    if (name.empty() || value.empty())
+    {
+        return false;
+    }
+    if (name.find_first_of(L"%${}") != std::wstring::npos)
+    {
+        return false;
+    }
+    _userVariables[name] = value;
+    return true;
+}
+
 bool CtxMenuAction::_execOpen(const std::wstring& file, const std::wstring& parameter, int show) const
 {
     SHELLEXECUTEINFOW sei = { 0 };
@@ -165,8 +181,41 @@ bool CtxMenuAction::_execExplore(const std::wstring& file) const
 
 void CtxMenuAction::_replaceVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections)
 {
+    _replaceUserVariables(str);
     _replaceEnvironmentVariables(str);
     _replaceCtxMenuVariables(str, targetType, selections);
+}
+
+void CtxMenuAction::_replaceUserVariables(std::wstring& str)
+{
+#if ENABLE_NESTED_USER_VARIABLES
+    std::set<std::wstring> usedVars;
+    bool replaced;
+    do {
+        replaced = false;
+        for (const auto& [key, value] : _userVariables)
+        {
+            std::wstring varPattern = L"$${" + key + L"}";
+            if (str.find(varPattern) != std::wstring::npos)
+            {
+                if (usedVars.count(varPattern))
+                {
+                    continue;
+                }
+            }
+            if (gInstance->StringReplace(str, varPattern, value) > 0)
+            {
+                replaced = true;
+                usedVars.insert(varPattern);
+            }
+        }
+    } while (replaced);
+#else
+    for (const auto& [key, value] : _userVariables)
+    {
+        gInstance->StringReplace(str, L"$${" + key + L"}", value);
+    }
+#endif
 }
 
 void CtxMenuAction::_replaceEnvironmentVariables(std::wstring& str)
