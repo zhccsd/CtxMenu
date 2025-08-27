@@ -1,6 +1,6 @@
 #ifndef CTXMENU_H
 #define CTXMENU_H
-#include "CtxMenuAction.h"
+#include "CtxMenuItem.h"
 #include "IconManager.h"
 
 class CtxMenu
@@ -25,12 +25,12 @@ private:
     UINT _parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd, tinyxml2::XMLElement* menuElement);
     void _insertSeparator(HMENU hMenu, UINT indexMenu);
     bool _insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, const std::wstring& iconPattern, HMENU* subMenu);
-    bool _insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuAction& action);
+    bool _insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuItem& actionItem);
 
 private:
     TargetType _targetType = TargetType::Unknown;
     std::vector<std::wstring> _selections;
-    std::map<WORD, CtxMenuAction> _actions;
+    std::map<WORD, CtxMenuItem> _actions;
     std::unique_ptr<IconManager> _iconManager;
 };
 

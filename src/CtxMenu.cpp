@@ -133,7 +133,7 @@ HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, U
         std::wstring name = nameAttr ? gInstance->Utf8ToUtf16(nameAttr) : L"";
         const char* valueAttr = varElement->Attribute("value");
         std::wstring value = valueAttr ? gInstance->Utf8ToUtf16(valueAttr) : L"";
-        CtxMenuAction::registerUserVariable(name, value);
+        CtxMenuItem::registerUserVariable(name, value);
         varElement = varElement->NextSiblingElement("var");
     }
     tinyxml2::XMLElement* menuElement = nullptr;
@@ -223,20 +223,19 @@ UINT CtxMenu::_parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD&
         }
         else if (name == "menu")
         {
+            CtxMenuItem menuItem = CtxMenuItem::parseFromXmlElement(element, _targetType, _selections);
             const char* textAttr = element->Attribute("text");
-            const char* iconAttr = element->Attribute("icon");
             std::wstring text = textAttr ? gInstance->Utf8ToUtf16(textAttr) : L"";
-            std::wstring iconPattern = iconAttr ? gInstance->Utf8ToUtf16(iconAttr) : L"";
             HMENU hSubMenu = nullptr;
-            if (_insertMenu(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, iconPattern, &hSubMenu))
+            if (_insertMenu(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, menuItem.iconPattern(), &hSubMenu))
             {
                 ret += _parseMenu(hSubMenu, idCmdFirst, idCmdLast, curCmd, element);
             }
         }
         else if (name == "action")
         {
-            CtxMenuAction action = CtxMenuAction::parseFromXmlElement(element, _targetType, _selections);
-            if (action.actionType() == CtxMenuAction::ActionType::Unknown)
+            CtxMenuItem actionItem = CtxMenuItem::parseFromXmlElement(element, _targetType, _selections);
+            if (actionItem.actionType() == CtxMenuItem::ActionType::Unknown)
             {
                 continue;
             }
@@ -246,7 +245,7 @@ UINT CtxMenu::_parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD&
             {
                 continue;
             }
-            if (!_insertAction(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, idCmdFirst, curCmd, action))
+            if (!_insertAction(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, idCmdFirst, curCmd, actionItem))
             {
             }
             else
@@ -299,7 +298,7 @@ bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text,
     return true;
 }
 
-bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuAction& action)
+bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuItem& actionItem)
 {
     MENUITEMINFOW mii = { 0 };
     mii.cbSize = sizeof(MENUITEMINFOW);
@@ -308,7 +307,7 @@ bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& tex
     mii.fState = MFS_ENABLED;
     StringCchPrintfW(gInstance->GetPathBuffer(), gInstance->GetPathBufferSize(), text.c_str());
     mii.dwTypeData = gInstance->GetPathBuffer();
-    mii.hbmpItem = _iconManager->getHBitmapFromPattern(action.iconPattern());
+    mii.hbmpItem = _iconManager->getHBitmapFromPattern(actionItem.iconPattern());
     if (mii.hbmpItem)
     {
         mii.fMask |= MIIM_BITMAP;
@@ -317,6 +316,6 @@ bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& tex
     {
         return false;
     }
-    _actions.emplace(idCmd, action);
+    _actions.emplace(idCmd, actionItem);
     return true;
 }

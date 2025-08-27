@@ -1,5 +1,5 @@
-#ifndef CTXMENUACTION_H
-#define CTXMENUACTION_H
+#ifndef CTXMENUITEM_H
+#define CTXMENUITEM_H
 #include "InstanceGlobal.h"
 #include <tinyxml2/11.0.0/tinyxml2.h>
 
@@ -7,7 +7,7 @@
 #define ACTION_PARAM_PARAMETER "parameter"
 #define ACTION_PARAM_SHOW      "show"
 
-class CtxMenuAction
+class CtxMenuItem
 {
 public:
     enum ActionType
@@ -18,9 +18,9 @@ public:
         Explore, // require: [ACTION_PARAM_FILE]
     };
 
-    CtxMenuAction(const std::map<std::string, std::wstring>& params = std::map<std::string, std::wstring>());
-    ~CtxMenuAction();
-    static CtxMenuAction parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections);
+    CtxMenuItem(const std::map<std::string, std::wstring>& params = std::map<std::string, std::wstring>());
+    ~CtxMenuItem();
+    static CtxMenuItem parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections);
     ActionType actionType() const;
     std::wstring iconPattern() const;
     bool execute() const;

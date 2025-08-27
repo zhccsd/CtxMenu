@@ -27,8 +27,8 @@ add_library(CtxMenuDLL SHARED
     src/ContextMenuHandler.h
     src/CtxMenu.cpp
     src/CtxMenu.h
-    src/CtxMenuAction.cpp
-    src/CtxMenuAction.h
+    src/CtxMenuItem.cpp
+    src/CtxMenuItem.h
     src/dllmain.cpp
     src/GlobalDef.h
     src/IconManager.cpp
