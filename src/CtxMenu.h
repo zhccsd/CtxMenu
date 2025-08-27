@@ -17,7 +17,7 @@ public:
 
 private:
     std::list<std::pair<std::wstring, std::wstring>> _getAllConfigPaths() const;
-    HMENU _buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd);
+    HMENU _buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd, std::wstring& iconPattern);
     HMENU _buildCtxMenu(UINT idCmdFirst, UINT idCmdLast, WORD& curCmd);
     HMENU _buildMenuFromElement(tinyxml2::XMLElement* menuElement, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd);
 

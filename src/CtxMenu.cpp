@@ -21,30 +21,37 @@ bool CtxMenu::initialize(TargetType targetType, const std::vector<std::wstring>&
 UINT CtxMenu::buildContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast)
 {
     ElapsedTimer timer;
-    std::list<std::pair<HMENU, std::wstring>> menuList;
+    struct MenuInfo
+    {
+        HMENU hMenu;
+        std::wstring menuName;
+        std::wstring iconPattern;
+    };
+    std::list<MenuInfo> menuList;
     std::list<std::pair<std::wstring, std::wstring>> configPaths = _getAllConfigPaths();
     WORD curCmd = 0;
     for (const auto& [configPath, configName] : configPaths)
     {
-        HMENU hXmlMenu = _buildMenuFromXml(configPath, idCmdFirst, idCmdLast, curCmd);
+        std::wstring iconPattern;
+        HMENU hXmlMenu = _buildMenuFromXml(configPath, idCmdFirst, idCmdLast, curCmd, iconPattern);
         if (hXmlMenu)
         {
-            menuList.push_back(std::make_pair(hXmlMenu, configName));
+            menuList.push_back({ hXmlMenu, configName, iconPattern });
         }
     }
     HMENU hCtxMenu = _buildCtxMenu(idCmdFirst, idCmdLast, curCmd);
     if (hCtxMenu)
     {
-        menuList.push_back(std::make_pair(hCtxMenu, L"CtxMenu"));
+        menuList.push_back({ hCtxMenu, L"CtxMenu", L"" });
     }
     if (menuList.empty())
     {
         return 0;
     }
     _insertSeparator(hMenu, indexMenu++);
-    for (const auto& [menu, menuName] : menuList)
+    for (const auto& menu: menuList)
     {
-        _insertMenu(hMenu, indexMenu++, menuName, L"", const_cast<HMENU*>(&menu));
+        _insertMenu(hMenu, indexMenu++, menu.menuName, menu.iconPattern, const_cast<HMENU*>(&menu.hMenu));
     }
     _insertSeparator(hMenu, indexMenu++);
     Logger::log("{} finished, used {:.4f} ms", __FUNCTION__, timer.elapsed());
@@ -106,7 +113,7 @@ std::list<std::pair<std::wstring, std::wstring>> CtxMenu::_getAllConfigPaths() c
     return result;
 }
 
-HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd)
+HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd, std::wstring& iconPattern)
 {
     tinyxml2::XMLDocument doc;
     FILE* file = nullptr;
@@ -126,6 +133,8 @@ HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, U
     {
         return nullptr;
     }
+    CtxMenuItem rootItem = CtxMenuItem::parseFromXmlElement(rootElement, _targetType, _selections);
+    iconPattern = rootItem.iconPattern();
     tinyxml2::XMLElement* varElement = rootElement->FirstChildElement("var");
     while (varElement)
     {
