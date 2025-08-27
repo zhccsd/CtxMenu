@@ -44,7 +44,7 @@ UINT CtxMenu::buildContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UIN
     _insertSeparator(hMenu, indexMenu++);
     for (const auto& [menu, menuName] : menuList)
     {
-        _insertMenu(hMenu, indexMenu++, menuName, const_cast<HMENU*>(&menu));
+        _insertMenu(hMenu, indexMenu++, menuName, L"", const_cast<HMENU*>(&menu));
     }
     _insertSeparator(hMenu, indexMenu++);
     Logger::log("{} finished, used {:.4f} ms", __FUNCTION__, timer.elapsed());
@@ -224,9 +224,11 @@ UINT CtxMenu::_parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD&
         else if (name == "menu")
         {
             const char* textAttr = element->Attribute("text");
+            const char* iconAttr = element->Attribute("icon");
             std::wstring text = textAttr ? gInstance->Utf8ToUtf16(textAttr) : L"";
+            std::wstring iconPattern = iconAttr ? gInstance->Utf8ToUtf16(iconAttr) : L"";
             HMENU hSubMenu = nullptr;
-            if (_insertMenu(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, &hSubMenu))
+            if (_insertMenu(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, iconPattern, &hSubMenu))
             {
                 ret += _parseMenu(hSubMenu, idCmdFirst, idCmdLast, curCmd, element);
             }
@@ -266,7 +268,7 @@ void CtxMenu::_insertSeparator(HMENU hMenu, UINT indexMenu)
     InsertMenuItemW(hMenu, indexMenu, TRUE, &mii);
 }
 
-bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, HMENU* subMenu)
+bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, const std::wstring& iconPattern, HMENU* subMenu)
 {
     if (!(*subMenu))
     {
@@ -284,6 +286,11 @@ bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text,
     mii.dwTypeData = const_cast<wchar_t*>(text.c_str());
     mii.cch = static_cast<UINT>(text.size());
     mii.hSubMenu = *subMenu;
+    mii.hbmpItem = _iconManager->getHBitmapFromPattern(iconPattern);
+    if (mii.hbmpItem)
+    {
+        mii.fMask |= MIIM_BITMAP;
+    }
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
         DestroyMenu(*subMenu);

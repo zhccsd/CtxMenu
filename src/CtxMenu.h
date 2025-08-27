@@ -24,7 +24,7 @@ private:
 private:
     UINT _parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd, tinyxml2::XMLElement* menuElement);
     void _insertSeparator(HMENU hMenu, UINT indexMenu);
-    bool _insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, HMENU* subMenu);
+    bool _insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, const std::wstring& iconPattern, HMENU* subMenu);
     bool _insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuAction& action);
 
 private:
