@@ -50,7 +50,12 @@ public:
 
     // utility functions
     std::wstring Utf8ToUtf16(const std::string& str) const;
+    std::string Utf16ToUtf8(const std::wstring& str) const;
     int StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const;
+    std::wstring GetFileNameFromPath(std::wstring path) const;
+    bool IsFilePath(const std::wstring& path) const;
+    bool IsDirectoryPath(const std::wstring& path) const;
+    bool CopyTextToClipboard(const std::wstring& text) const;
 
 private:
     bool _getModulePath(HMODULE hModule, size_t bufferSize, std::wstring& result) const;

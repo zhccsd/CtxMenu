@@ -51,6 +51,10 @@ CtxMenuItem::ActionType CtxMenuItem::actionType() const
     {
         return Explore;
     }
+    else if (iter->second == L"copy")
+    {
+        return Copy;
+    }
     return Unknown;
 }
 
@@ -120,6 +124,15 @@ bool CtxMenuItem::execute() const
         }
         return _execExplore(iterFile->second);
     }
+    else if (actionType == Copy)
+    {
+        auto iterParam = _params.find(ACTION_PARAM_PARAMETER);
+        if (iterParam == _params.end() || iterParam->second.empty())
+        {
+            return false;
+        }
+        return _execCopy(iterParam->second);
+    }
     return false;
 }
 
@@ -177,6 +190,11 @@ bool CtxMenuItem::_execExplore(const std::wstring& file) const
     auto bufSize = gInstance->GetPathBufferSize();
     StringCchPrintfW(buf, bufSize, L"/select,\"%s\"", file.c_str());
     return _execOpen(L"explorer.exe", buf, SW_SHOWNORMAL);
+}
+
+bool CtxMenuItem::_execCopy(const std::wstring& parameter) const
+{
+    return gInstance->CopyTextToClipboard(parameter);
 }
 
 void CtxMenuItem::_replaceVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections)
@@ -239,4 +257,8 @@ void CtxMenuItem::_replaceCtxMenuVariables(std::wstring& str, TargetType targetT
         }
     }
     gInstance->StringReplace(str, L"${CTXMENU_DLL_PATH}", gInstance->GetDllPath());
+    for (int i = 0; i < selections.size(); ++i)
+    {
+        gInstance->StringReplace(str, L"${CTXMENU_FILE_" + std::to_wstring(i) + L"}", selections[i]);
+    }
 }

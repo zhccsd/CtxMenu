@@ -164,36 +164,76 @@ HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, U
 
 HMENU CtxMenu::_buildCtxMenu(UINT idCmdFirst, UINT idCmdLast, WORD& curCmd)
 {
-    if (_targetType != TargetType::DirectoryBackground)
+    if (_targetType == TargetType::DirectoryBackground)
     {
-        return nullptr;
+        tinyxml2::XMLDocument doc;
+        tinyxml2::XMLElement* menuElement = doc.NewElement("ctxMenu");
+
+        auto action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "Restart Explorer");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "cmd.exe");
+        action->SetAttribute("parameter", "/c taskkill /f /im explorer.exe && start explorer");
+
+        action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "CtxMenu Home");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "${CTXMENU_HOME_PATH}");
+
+        action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "CtxMenu Config");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "${CTXMENU_CONFIG_PATH}");
+
+        action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "About CtxMenu");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "https://github.com/zhccsd/CtxMenu");
+
+        return _buildMenuFromElement(menuElement, idCmdFirst, idCmdLast, curCmd);
     }
+    if (_selections.empty())
+    {
+        return NULL;
+    }
+    if (_targetType == TargetType::SingleFile || _targetType == TargetType::SingleDirectory)
+    {
+        std::wstring file = _selections[0];
+        std::wstring fileName = gInstance->GetFileNameFromPath(file);
+        if (fileName.empty())
+        {
+            return NULL;
+        }
 
-    tinyxml2::XMLDocument doc;
-    tinyxml2::XMLElement* menuElement = doc.NewElement("ctxMenu");
+        tinyxml2::XMLDocument doc;
+        tinyxml2::XMLElement* menuElement = doc.NewElement("ctxMenu");
+        tinyxml2::XMLElement* action;
+        std::string actionStr;
 
-    auto action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "Restart Explorer");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "cmd.exe");
-    action->SetAttribute("parameter", "/c taskkill /f /im explorer.exe && start explorer");
+        auto copyMenu = menuElement->InsertNewChildElement("menu");
+        copyMenu->SetAttribute("text", "Copy");
 
-    action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "CtxMenu Home");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "${CTXMENU_HOME_PATH}");
+        action = copyMenu->InsertNewChildElement("action");
+        action->SetAttribute("text", "Full Path");
+        action->SetAttribute("type", "copy");
+        action->SetAttribute("parameter", "${CTXMENU_FILE_0}");
 
-    action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "CtxMenu Config");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "${CTXMENU_CONFIG_PATH}");
+        action = copyMenu->InsertNewChildElement("action");
+        action->SetAttribute("text", "CtxMenu open action");
+        action->SetAttribute("type", "copy");
+        actionStr = "<action text=\"";
+        actionStr += gInstance->Utf16ToUtf8(fileName);
+        actionStr += "\" type=\"open\" file=\"${CTXMENU_FILE_0}\"";
+        if (gInstance->IsDirectoryPath(file))
+        {
+            actionStr += " icon=\"exeIcon:explorer.exe\"";
+        }
+        actionStr += "/>";
+        action->SetAttribute("parameter", actionStr.c_str());
 
-    action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "About CtxMenu");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "https://github.com/zhccsd/CtxMenu");
-
-    return _buildMenuFromElement(menuElement, idCmdFirst, idCmdLast, curCmd);
+        return _buildMenuFromElement(menuElement, idCmdFirst, idCmdLast, curCmd);
+    }
+    return NULL;
 }
 
 HMENU CtxMenu::_buildMenuFromElement(tinyxml2::XMLElement* menuElement, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd)

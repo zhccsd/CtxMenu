@@ -16,6 +16,7 @@ public:
         Open, // require: [ACTION_PARAM_FILE], optional: [ACTION_PARAM_PARAMETER, ACTION_PARAM_SHOW]
         Runas, // require: [ACTION_PARAM_FILE], optional: [ACTION_PARAM_PARAMETER, ACTION_PARAM_SHOW]
         Explore, // require: [ACTION_PARAM_FILE]
+        Copy, // require: [ACTION_PARAM_PARAMETER]
     };
 
     CtxMenuItem(const std::map<std::string, std::wstring>& params = std::map<std::string, std::wstring>());
@@ -30,6 +31,7 @@ private:
     bool _execOpen(const std::wstring& file, const std::wstring& parameter = L"", int show = SW_SHOWNORMAL) const;
     bool _execRunas(const std::wstring& file, const std::wstring& parameter = L"", int show = SW_SHOWNORMAL) const;
     bool _execExplore(const std::wstring& file) const;
+    bool _execCopy(const std::wstring& parameter) const;
 
 private:
     static void _replaceVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections);
