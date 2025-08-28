@@ -37,6 +37,7 @@ add_library(CtxMenuDLL SHARED
     src/InstanceGlobal.h
     src/Logger.cpp
     src/Logger.h
+    resource/CtxMenu.rc
 )
 
 if(MSVC)

@@ -42,7 +42,8 @@ UINT CtxMenu::buildContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UIN
     HMENU hCtxMenu = _buildCtxMenu(idCmdFirst, idCmdLast, curCmd);
     if (hCtxMenu)
     {
-        menuList.push_back({ hCtxMenu, L"CtxMenu", L"" });
+        StringCchPrintfW(gInstance->GetPathBuffer(), gInstance->GetPathBufferSize(), L"exeIcon:%s@-101", gInstance->GetDllPath().c_str());
+        menuList.push_back({ hCtxMenu, L"CtxMenu", std::wstring(gInstance->GetPathBuffer()) });
     }
     if (menuList.empty())
     {

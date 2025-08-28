@@ -238,4 +238,5 @@ void CtxMenuItem::_replaceCtxMenuVariables(std::wstring& str, TargetType targetT
             gInstance->StringReplace(str, L"${CTXMENU_PWD}", selections[0]);
         }
     }
+    gInstance->StringReplace(str, L"${CTXMENU_DLL_PATH}", gInstance->GetDllPath());
 }
