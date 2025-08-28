@@ -105,6 +105,10 @@ bool IconManager::_cacheExeIcon(const std::wstring& pattern)
         _iconCacheMap[pattern] = { NULL, 0, 0 };
         return false;
     }
+    if (iconInfo.hbmMask)
+    {
+        DeleteObject(iconInfo.hbmMask);
+    }
     if (!iconInfo.hbmColor)
     {
         DestroyIcon(hSmallIcon);
@@ -112,7 +116,17 @@ bool IconManager::_cacheExeIcon(const std::wstring& pattern)
         return false;
     }
     BITMAP bm;
-    GetObject(iconInfo.hbmColor, sizeof(bm), &bm);
+    int ret = GetObjectW(iconInfo.hbmColor, sizeof(bm), &bm);
+    if (iconInfo.hbmColor)
+    {
+        DeleteObject(iconInfo.hbmColor);
+    }
+    if (ret == 0)
+    {
+        DestroyIcon(hSmallIcon);
+        _iconCacheMap[pattern] = { NULL, 0, 0 };
+        return false;
+    }
     _iconCacheMap[pattern] = { hSmallIcon, bm.bmWidth, bm.bmHeight };
     return true;
 }
