@@ -9,6 +9,7 @@ if(WIN32)
     add_definitions(-DNOMINMAX)
     add_definitions(-DUNICODE -D_UNICODE)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    add_compile_options(/MP)
 endif()
 
 set(THIRDPARTY_DIR "${CMAKE_SOURCE_DIR}/3rdparty")
@@ -26,14 +27,17 @@ add_library(CtxMenuDLL SHARED
     src/ContextMenuHandler.h
     src/CtxMenu.cpp
     src/CtxMenu.h
-    src/CtxMenuAction.cpp
-    src/CtxMenuAction.h
+    src/CtxMenuItem.cpp
+    src/CtxMenuItem.h
     src/dllmain.cpp
     src/GlobalDef.h
+    src/IconManager.cpp
+    src/IconManager.h
     src/InstanceGlobal.cpp
     src/InstanceGlobal.h
     src/Logger.cpp
     src/Logger.h
+    resource/CtxMenu.rc
 )
 
 if(MSVC)

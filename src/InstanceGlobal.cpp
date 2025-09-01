@@ -206,18 +206,135 @@ std::wstring InstanceGlobal::Utf8ToUtf16(const std::string& str) const
     return wstrTo;
 }
 
-void InstanceGlobal::StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const
+std::string InstanceGlobal::Utf16ToUtf8(const std::wstring& str) const
+{
+    if (str.empty())
+    {
+        return std::string();
+    }
+    int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), int(str.size()), NULL, 0, NULL, NULL);
+    if (sizeNeeded <= 0)
+    {
+        return std::string();
+    }
+    std::string strTo(sizeNeeded, 0);
+    WideCharToMultiByte(CP_UTF8, 0, str.c_str(), int(str.size()), &strTo[0], sizeNeeded, NULL, NULL);
+    return strTo;
+}
+
+int InstanceGlobal::StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const
 {
     if (oldValue.empty())
     {
-        return;
+        0;
     }
+    int replacement = 0;
     size_t pos = 0;
     while ((pos = str.find(oldValue, pos)) != std::wstring::npos)
     {
         str.replace(pos, oldValue.length(), newValue);
         pos += newValue.length();
+        replacement++;
     }
+    return replacement;
+}
+
+std::wstring InstanceGlobal::GetFileNameFromPath(std::wstring path) const
+{
+    if (path.empty())
+    {
+        return path;
+    }
+    size_t pos = path.find_last_not_of(L"\\/");
+    if (pos == std::wstring::npos)
+    {
+        return L"";
+    }
+    path = path.substr(0, pos + 1);
+    if (path.empty())
+    {
+        return path;
+    }
+    pos = path.find_last_of(L"\\/");
+    if (pos != std::wstring::npos)
+    {
+        path = path.substr(pos + 1);
+    }
+    pos = path.find_last_of(L'.');
+    if (pos != std::wstring::npos)
+    {
+        path.erase(pos);
+    }
+    return path;
+}
+
+bool InstanceGlobal::IsFilePath(const std::wstring& path) const
+{
+    if (path.empty())
+    {
+        return false;
+    }
+    DWORD attrs = GetFileAttributesW(path.c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES)
+    {
+        return false;
+    }
+    return !(attrs & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+bool InstanceGlobal::IsDirectoryPath(const std::wstring& path) const
+{
+    if (path.empty())
+    {
+        return false;
+    }
+    DWORD attrs = GetFileAttributesW(path.c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES)
+    {
+        return false;
+    }
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+bool InstanceGlobal::CopyTextToClipboard(const std::wstring& text) const
+{
+    if (text.empty())
+    {
+        return false;
+    }
+    if (!OpenClipboard(NULL))
+    {
+        return false;
+    }
+    if (!EmptyClipboard())
+    {
+        CloseClipboard();
+        return false;
+    }
+    size_t bytes = (text.size() + 1) * sizeof(wchar_t);
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, bytes);
+    if (!hGlobal)
+    {
+        CloseClipboard();
+        return false;
+    }
+    void* pGlobal = GlobalLock(hGlobal);
+    if (!pGlobal)
+    {
+        GlobalFree(hGlobal);
+        CloseClipboard();
+        return false;
+    }
+    memcpy(pGlobal, text.c_str(), bytes);
+    GlobalUnlock(hGlobal);
+    if (!SetClipboardData(CF_UNICODETEXT, hGlobal))
+    {
+        GlobalFree(hGlobal);
+        CloseClipboard();
+        return false;
+    }
+    CloseClipboard();
+    return true;
 }
 
 bool InstanceGlobal::_getModulePath(HMODULE hModule, size_t bufferSize, std::wstring& result) const

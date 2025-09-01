@@ -1,5 +1,5 @@
-#ifndef CTXMENUACTION_H
-#define CTXMENUACTION_H
+#ifndef CTXMENUITEM_H
+#define CTXMENUITEM_H
 #include "InstanceGlobal.h"
 #include <tinyxml2/11.0.0/tinyxml2.h>
 
@@ -7,7 +7,7 @@
 #define ACTION_PARAM_PARAMETER "parameter"
 #define ACTION_PARAM_SHOW      "show"
 
-class CtxMenuAction
+class CtxMenuItem
 {
 public:
     enum ActionType
@@ -16,26 +16,32 @@ public:
         Open, // require: [ACTION_PARAM_FILE], optional: [ACTION_PARAM_PARAMETER, ACTION_PARAM_SHOW]
         Runas, // require: [ACTION_PARAM_FILE], optional: [ACTION_PARAM_PARAMETER, ACTION_PARAM_SHOW]
         Explore, // require: [ACTION_PARAM_FILE]
+        Copy, // require: [ACTION_PARAM_PARAMETER]
     };
 
-    CtxMenuAction(const std::map<std::string, std::wstring>& params = std::map<std::string, std::wstring>());
-    ~CtxMenuAction();
-    static CtxMenuAction parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections);
+    CtxMenuItem(const std::map<std::string, std::wstring>& params = std::map<std::string, std::wstring>());
+    ~CtxMenuItem();
+    static CtxMenuItem parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections);
     ActionType actionType() const;
+    std::wstring iconPattern() const;
     bool execute() const;
+    static bool registerUserVariable(const std::wstring& name, const std::wstring& value);
 
 private:
     bool _execOpen(const std::wstring& file, const std::wstring& parameter = L"", int show = SW_SHOWNORMAL) const;
     bool _execRunas(const std::wstring& file, const std::wstring& parameter = L"", int show = SW_SHOWNORMAL) const;
     bool _execExplore(const std::wstring& file) const;
+    bool _execCopy(const std::wstring& parameter) const;
 
 private:
     static void _replaceVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections);
+    static void _replaceUserVariables(std::wstring& str);
     static void _replaceEnvironmentVariables(std::wstring& str);
     static void _replaceCtxMenuVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections);
 
 private:
     std::map<std::string, std::wstring> _params;
+    static std::map<std::wstring, std::wstring> _userVariables;
 };
 
 #endif

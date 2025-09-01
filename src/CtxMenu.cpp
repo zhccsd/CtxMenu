@@ -4,6 +4,7 @@
 
 CtxMenu::CtxMenu()
 {
+    _iconManager = std::make_unique<IconManager>();
 }
 
 CtxMenu::~CtxMenu()
@@ -20,30 +21,38 @@ bool CtxMenu::initialize(TargetType targetType, const std::vector<std::wstring>&
 UINT CtxMenu::buildContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast)
 {
     ElapsedTimer timer;
-    std::list<std::pair<HMENU, std::wstring>> menuList;
+    struct MenuInfo
+    {
+        HMENU hMenu;
+        std::wstring menuName;
+        std::wstring iconPattern;
+    };
+    std::list<MenuInfo> menuList;
     std::list<std::pair<std::wstring, std::wstring>> configPaths = _getAllConfigPaths();
     WORD curCmd = 0;
     for (const auto& [configPath, configName] : configPaths)
     {
-        HMENU hXmlMenu = _buildMenuFromXml(configPath, idCmdFirst, idCmdLast, curCmd);
+        std::wstring iconPattern;
+        HMENU hXmlMenu = _buildMenuFromXml(configPath, idCmdFirst, idCmdLast, curCmd, iconPattern);
         if (hXmlMenu)
         {
-            menuList.push_back(std::make_pair(hXmlMenu, configName));
+            menuList.push_back({ hXmlMenu, configName, iconPattern });
         }
     }
     HMENU hCtxMenu = _buildCtxMenu(idCmdFirst, idCmdLast, curCmd);
     if (hCtxMenu)
     {
-        menuList.push_back(std::make_pair(hCtxMenu, L"CtxMenu"));
+        StringCchPrintfW(gInstance->GetPathBuffer(), gInstance->GetPathBufferSize(), L"exeIcon:%s@-101", gInstance->GetDllPath().c_str());
+        menuList.push_back({ hCtxMenu, L"CtxMenu", std::wstring(gInstance->GetPathBuffer()) });
     }
     if (menuList.empty())
     {
         return 0;
     }
     _insertSeparator(hMenu, indexMenu++);
-    for (const auto& [menu, menuName] : menuList)
+    for (const auto& menu: menuList)
     {
-        _insertMenu(hMenu, indexMenu++, menuName, const_cast<HMENU*>(&menu));
+        _insertMenu(hMenu, indexMenu++, menu.menuName, menu.iconPattern, const_cast<HMENU*>(&menu.hMenu));
     }
     _insertSeparator(hMenu, indexMenu++);
     Logger::log("{} finished, used {:.4f} ms", __FUNCTION__, timer.elapsed());
@@ -105,7 +114,7 @@ std::list<std::pair<std::wstring, std::wstring>> CtxMenu::_getAllConfigPaths() c
     return result;
 }
 
-HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd)
+HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd, std::wstring& iconPattern)
 {
     tinyxml2::XMLDocument doc;
     FILE* file = nullptr;
@@ -125,6 +134,18 @@ HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, U
     {
         return nullptr;
     }
+    CtxMenuItem rootItem = CtxMenuItem::parseFromXmlElement(rootElement, _targetType, _selections);
+    iconPattern = rootItem.iconPattern();
+    tinyxml2::XMLElement* varElement = rootElement->FirstChildElement("var");
+    while (varElement)
+    {
+        const char* nameAttr = varElement->Attribute("name");
+        std::wstring name = nameAttr ? gInstance->Utf8ToUtf16(nameAttr) : L"";
+        const char* valueAttr = varElement->Attribute("value");
+        std::wstring value = valueAttr ? gInstance->Utf8ToUtf16(valueAttr) : L"";
+        CtxMenuItem::registerUserVariable(name, value);
+        varElement = varElement->NextSiblingElement("var");
+    }
     tinyxml2::XMLElement* menuElement = nullptr;
     switch (_targetType)
     {
@@ -143,36 +164,76 @@ HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, U
 
 HMENU CtxMenu::_buildCtxMenu(UINT idCmdFirst, UINT idCmdLast, WORD& curCmd)
 {
-    if (_targetType != TargetType::DirectoryBackground)
+    if (_targetType == TargetType::DirectoryBackground)
     {
-        return nullptr;
+        tinyxml2::XMLDocument doc;
+        tinyxml2::XMLElement* menuElement = doc.NewElement("ctxMenu");
+
+        auto action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "Restart Explorer");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "cmd.exe");
+        action->SetAttribute("parameter", "/c taskkill /f /im explorer.exe && start explorer");
+
+        action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "CtxMenu Home");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "${CTXMENU_HOME_PATH}");
+
+        action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "CtxMenu Config");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "${CTXMENU_CONFIG_PATH}");
+
+        action = menuElement->InsertNewChildElement("action");
+        action->SetAttribute("text", "About CtxMenu");
+        action->SetAttribute("type", "open");
+        action->SetAttribute("file", "https://github.com/zhccsd/CtxMenu");
+
+        return _buildMenuFromElement(menuElement, idCmdFirst, idCmdLast, curCmd);
     }
+    if (_selections.empty())
+    {
+        return NULL;
+    }
+    if (_targetType == TargetType::SingleFile || _targetType == TargetType::SingleDirectory)
+    {
+        std::wstring file = _selections[0];
+        std::wstring fileName = gInstance->GetFileNameFromPath(file);
+        if (fileName.empty())
+        {
+            return NULL;
+        }
 
-    tinyxml2::XMLDocument doc;
-    tinyxml2::XMLElement* menuElement = doc.NewElement("ctxMenu");
+        tinyxml2::XMLDocument doc;
+        tinyxml2::XMLElement* menuElement = doc.NewElement("ctxMenu");
+        tinyxml2::XMLElement* action;
+        std::string actionStr;
 
-    auto action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "Restart Explorer");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "cmd.exe");
-    action->SetAttribute("parameter", "/c taskkill /f /im explorer.exe && start explorer");
+        auto copyMenu = menuElement->InsertNewChildElement("menu");
+        copyMenu->SetAttribute("text", "Copy");
 
-    action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "CtxMenu Home");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "${CTXMENU_HOME_PATH}");
+        action = copyMenu->InsertNewChildElement("action");
+        action->SetAttribute("text", "Full Path");
+        action->SetAttribute("type", "copy");
+        action->SetAttribute("parameter", "${CTXMENU_FILE_0}");
 
-    action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "CtxMenu Config");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "${CTXMENU_CONFIG_PATH}");
+        action = copyMenu->InsertNewChildElement("action");
+        action->SetAttribute("text", "CtxMenu open action");
+        action->SetAttribute("type", "copy");
+        actionStr = "<action text=\"";
+        actionStr += gInstance->Utf16ToUtf8(fileName);
+        actionStr += "\" type=\"open\" file=\"${CTXMENU_FILE_0}\"";
+        if (gInstance->IsDirectoryPath(file))
+        {
+            actionStr += " icon=\"exeIcon:explorer.exe\"";
+        }
+        actionStr += "/>";
+        action->SetAttribute("parameter", actionStr.c_str());
 
-    action = menuElement->InsertNewChildElement("action");
-    action->SetAttribute("text", "About CtxMenu");
-    action->SetAttribute("type", "open");
-    action->SetAttribute("file", "https://github.com/zhccsd/CtxMenu");
-
-    return _buildMenuFromElement(menuElement, idCmdFirst, idCmdLast, curCmd);
+        return _buildMenuFromElement(menuElement, idCmdFirst, idCmdLast, curCmd);
+    }
+    return NULL;
 }
 
 HMENU CtxMenu::_buildMenuFromElement(tinyxml2::XMLElement* menuElement, UINT idCmdFirst, UINT idCmdLast, WORD& curCmd)
@@ -212,18 +273,19 @@ UINT CtxMenu::_parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD&
         }
         else if (name == "menu")
         {
+            CtxMenuItem menuItem = CtxMenuItem::parseFromXmlElement(element, _targetType, _selections);
             const char* textAttr = element->Attribute("text");
             std::wstring text = textAttr ? gInstance->Utf8ToUtf16(textAttr) : L"";
             HMENU hSubMenu = nullptr;
-            if (_insertMenu(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, &hSubMenu))
+            if (_insertMenu(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, menuItem.iconPattern(), &hSubMenu))
             {
                 ret += _parseMenu(hSubMenu, idCmdFirst, idCmdLast, curCmd, element);
             }
         }
         else if (name == "action")
         {
-            CtxMenuAction action = CtxMenuAction::parseFromXmlElement(element, _targetType, _selections);
-            if (action.actionType() == CtxMenuAction::ActionType::Unknown)
+            CtxMenuItem actionItem = CtxMenuItem::parseFromXmlElement(element, _targetType, _selections);
+            if (actionItem.actionType() == CtxMenuItem::ActionType::Unknown)
             {
                 continue;
             }
@@ -233,7 +295,7 @@ UINT CtxMenu::_parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD&
             {
                 continue;
             }
-            if (!_insertAction(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, idCmdFirst, curCmd, action))
+            if (!_insertAction(hRootMenu, INSERT_MENU_INDEX(hRootMenu), text, idCmdFirst, curCmd, actionItem))
             {
             }
             else
@@ -255,7 +317,7 @@ void CtxMenu::_insertSeparator(HMENU hMenu, UINT indexMenu)
     InsertMenuItemW(hMenu, indexMenu, TRUE, &mii);
 }
 
-bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, HMENU* subMenu)
+bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, const std::wstring& iconPattern, HMENU* subMenu)
 {
     if (!(*subMenu))
     {
@@ -273,6 +335,11 @@ bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text,
     mii.dwTypeData = const_cast<wchar_t*>(text.c_str());
     mii.cch = static_cast<UINT>(text.size());
     mii.hSubMenu = *subMenu;
+    mii.hbmpItem = _iconManager->getHBitmapFromPattern(iconPattern);
+    if (mii.hbmpItem)
+    {
+        mii.fMask |= MIIM_BITMAP;
+    }
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
         DestroyMenu(*subMenu);
@@ -281,7 +348,7 @@ bool CtxMenu::_insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text,
     return true;
 }
 
-bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuAction& action)
+bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuItem& actionItem)
 {
     MENUITEMINFOW mii = { 0 };
     mii.cbSize = sizeof(MENUITEMINFOW);
@@ -290,10 +357,15 @@ bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& tex
     mii.fState = MFS_ENABLED;
     StringCchPrintfW(gInstance->GetPathBuffer(), gInstance->GetPathBufferSize(), text.c_str());
     mii.dwTypeData = gInstance->GetPathBuffer();
+    mii.hbmpItem = _iconManager->getHBitmapFromPattern(actionItem.iconPattern());
+    if (mii.hbmpItem)
+    {
+        mii.fMask |= MIIM_BITMAP;
+    }
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
         return false;
     }
-    _actions.emplace(idCmd, action);
+    _actions.emplace(idCmd, actionItem);
     return true;
 }

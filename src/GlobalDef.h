@@ -5,6 +5,8 @@
 // Not including CtxMenu and two separators
 #define WINDOWS_CONTEXT_MENU_ENTRIES_MAX 10
 
+#define ENABLE_NESTED_USER_VARIABLES true
+
 enum class TargetType
 {
     Unknown,

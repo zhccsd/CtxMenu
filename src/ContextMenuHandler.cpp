@@ -63,7 +63,6 @@ STDMETHODIMP ContextMenuHandler::Initialize(
     {
         SHGetPathFromIDListW(pidlFolder, pathBuffer);
         _ctxMenu->initialize(TargetType::DirectoryBackground, { std::wstring(pathBuffer) });
-        //OutputDebugStringW((_currentFolderPath + L"\r\n").c_str());
         return S_OK;
     }
     if (pdtobj != nullptr)

@@ -1,19 +1,21 @@
-#include "CtxMenuAction.h"
+#include "CtxMenuItem.h"
 
-CtxMenuAction::CtxMenuAction(const std::map<std::string, std::wstring>& params)
+std::map<std::wstring, std::wstring> CtxMenuItem::_userVariables;
+
+CtxMenuItem::CtxMenuItem(const std::map<std::string, std::wstring>& params)
     : _params(params)
 {
 }
 
-CtxMenuAction::~CtxMenuAction()
+CtxMenuItem::~CtxMenuItem()
 {
 }
 
-CtxMenuAction CtxMenuAction::parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections)
+CtxMenuItem CtxMenuItem::parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections)
 {
     if (!element)
     {
-        return CtxMenuAction();
+        return CtxMenuItem();
     }
     std::map<std::string, std::wstring> params;
     for (const tinyxml2::XMLAttribute* attr = element->FirstAttribute(); attr != nullptr; attr = attr->Next())
@@ -27,10 +29,10 @@ CtxMenuAction CtxMenuAction::parseFromXmlElement(tinyxml2::XMLElement* element, 
             params[paramName] = value;
         }
     }
-    return CtxMenuAction(params);
+    return CtxMenuItem(params);
 }
 
-CtxMenuAction::ActionType CtxMenuAction::actionType() const
+CtxMenuItem::ActionType CtxMenuItem::actionType() const
 {
     auto iter = _params.find("type");
     if (iter == _params.end())
@@ -49,10 +51,24 @@ CtxMenuAction::ActionType CtxMenuAction::actionType() const
     {
         return Explore;
     }
+    else if (iter->second == L"copy")
+    {
+        return Copy;
+    }
     return Unknown;
 }
 
-bool CtxMenuAction::execute() const
+std::wstring CtxMenuItem::iconPattern() const
+{
+    auto iter = _params.find("icon");
+    if (iter != _params.end() && !iter->second.empty())
+    {
+        return iter->second;
+    }
+    return std::wstring();
+}
+
+bool CtxMenuItem::execute() const
 {
     ActionType actionType = this->actionType();
     if (actionType == Unknown)
@@ -108,10 +124,33 @@ bool CtxMenuAction::execute() const
         }
         return _execExplore(iterFile->second);
     }
+    else if (actionType == Copy)
+    {
+        auto iterParam = _params.find(ACTION_PARAM_PARAMETER);
+        if (iterParam == _params.end() || iterParam->second.empty())
+        {
+            return false;
+        }
+        return _execCopy(iterParam->second);
+    }
     return false;
 }
 
-bool CtxMenuAction::_execOpen(const std::wstring& file, const std::wstring& parameter, int show) const
+bool CtxMenuItem::registerUserVariable(const std::wstring& name, const std::wstring& value)
+{
+    if (name.empty() || value.empty())
+    {
+        return false;
+    }
+    if (name.find_first_of(L"%${}") != std::wstring::npos)
+    {
+        return false;
+    }
+    _userVariables[name] = value;
+    return true;
+}
+
+bool CtxMenuItem::_execOpen(const std::wstring& file, const std::wstring& parameter, int show) const
 {
     SHELLEXECUTEINFOW sei = { 0 };
     sei.cbSize = sizeof(sei);
@@ -128,7 +167,7 @@ bool CtxMenuAction::_execOpen(const std::wstring& file, const std::wstring& para
     return false;
 }
 
-bool CtxMenuAction::_execRunas(const std::wstring& file, const std::wstring& parameter, int show) const
+bool CtxMenuItem::_execRunas(const std::wstring& file, const std::wstring& parameter, int show) const
 {
     SHELLEXECUTEINFOW sei = { 0 };
     sei.cbSize = sizeof(sei);
@@ -145,7 +184,7 @@ bool CtxMenuAction::_execRunas(const std::wstring& file, const std::wstring& par
     return false;
 }
 
-bool CtxMenuAction::_execExplore(const std::wstring& file) const
+bool CtxMenuItem::_execExplore(const std::wstring& file) const
 {
     auto buf = gInstance->GetPathBuffer(true);
     auto bufSize = gInstance->GetPathBufferSize();
@@ -153,13 +192,51 @@ bool CtxMenuAction::_execExplore(const std::wstring& file) const
     return _execOpen(L"explorer.exe", buf, SW_SHOWNORMAL);
 }
 
-void CtxMenuAction::_replaceVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections)
+bool CtxMenuItem::_execCopy(const std::wstring& parameter) const
 {
+    return gInstance->CopyTextToClipboard(parameter);
+}
+
+void CtxMenuItem::_replaceVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections)
+{
+    _replaceUserVariables(str);
     _replaceEnvironmentVariables(str);
     _replaceCtxMenuVariables(str, targetType, selections);
 }
 
-void CtxMenuAction::_replaceEnvironmentVariables(std::wstring& str)
+void CtxMenuItem::_replaceUserVariables(std::wstring& str)
+{
+#if ENABLE_NESTED_USER_VARIABLES
+    std::set<std::wstring> usedVars;
+    bool replaced;
+    do {
+        replaced = false;
+        for (const auto& [key, value] : _userVariables)
+        {
+            std::wstring varPattern = L"$${" + key + L"}";
+            if (str.find(varPattern) != std::wstring::npos)
+            {
+                if (usedVars.count(varPattern))
+                {
+                    continue;
+                }
+            }
+            if (gInstance->StringReplace(str, varPattern, value) > 0)
+            {
+                replaced = true;
+                usedVars.insert(varPattern);
+            }
+        }
+    } while (replaced);
+#else
+    for (const auto& [key, value] : _userVariables)
+    {
+        gInstance->StringReplace(str, L"$${" + key + L"}", value);
+    }
+#endif
+}
+
+void CtxMenuItem::_replaceEnvironmentVariables(std::wstring& str)
 {
     auto envMap = gInstance->EnvironmentVariables();
     for (const auto& [key, value] : envMap)
@@ -168,7 +245,7 @@ void CtxMenuAction::_replaceEnvironmentVariables(std::wstring& str)
     }
 }
 
-void CtxMenuAction::_replaceCtxMenuVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections)
+void CtxMenuItem::_replaceCtxMenuVariables(std::wstring& str, TargetType targetType, const std::vector<std::wstring>& selections)
 {
     gInstance->StringReplace(str, L"${CTXMENU_HOME_PATH}", gInstance->GetDllDirPath());
     gInstance->StringReplace(str, L"${CTXMENU_CONFIG_PATH}", gInstance->GetConfigDirPath());
@@ -178,5 +255,10 @@ void CtxMenuAction::_replaceCtxMenuVariables(std::wstring& str, TargetType targe
         {
             gInstance->StringReplace(str, L"${CTXMENU_PWD}", selections[0]);
         }
+    }
+    gInstance->StringReplace(str, L"${CTXMENU_DLL_PATH}", gInstance->GetDllPath());
+    for (int i = 0; i < selections.size(); ++i)
+    {
+        gInstance->StringReplace(str, L"${CTXMENU_FILE_" + std::to_wstring(i) + L"}", selections[i]);
     }
 }
