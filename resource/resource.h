@@ -1,5 +1,5 @@
-#define CTXMENU_VERSION      1,0,0,0
-#define CTXMENU_VERSION_STR "1.0.0.0"
+#define CTXMENU_VERSION      1,0,1,0
+#define CTXMENU_VERSION_STR "1.0.1.0"
 
 #define IDI_NORMAL                      100
 #define IDI_SMALL                       101
