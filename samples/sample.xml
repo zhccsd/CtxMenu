@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root>
     <var name="VS2022_EXE_PATH" value="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"/>
+    <var name="QT5.15.2_MINGW81_X64_PATH" value="C:\Qt\5.15.2\mingw81_64\bin"/>
     <background>
         <action text="view environments" type="open" file="cmd.exe" parameter="/k set" icon="exeIcon:cmd.exe"/>
         <action text="open cmd here" type="open" file="cmd.exe" parameter="/k cd /d ${CTXMENU_PWD}" icon="exeIcon:cmd.exe"/>
@@ -17,4 +18,9 @@
             <action text="APPDATA" type="open" file="%APPDATA%" icon="exeIcon:explorer.exe"/>
         </menu>
     </background>
+    <file>
+        <menu text="windeployqt">
+            <action text="5.15.2mingw81_x64" type="open" file="cmd.exe" parameter="/c $${QT5.15.2_MINGW81_X64_PATH}\qtenv2.bat && $${QT5.15.2_MINGW81_X64_PATH}\windeployqt.exe ${CTXMENU_FILE_0}"/>
+        </menu>
+    </file>
 </root>
