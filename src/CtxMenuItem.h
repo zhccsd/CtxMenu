@@ -24,10 +24,12 @@ public:
     static CtxMenuItem parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections);
     ActionType actionType() const;
     std::wstring iconPattern() const;
+    bool executable() const;
     bool execute() const;
     static bool registerUserVariable(const std::wstring& name, const std::wstring& value);
 
 private:
+    bool _isFileParamExecutable() const;
     bool _execOpen(const std::wstring& file, const std::wstring& parameter = L"", int show = SW_SHOWNORMAL) const;
     bool _execRunas(const std::wstring& file, const std::wstring& parameter = L"", int show = SW_SHOWNORMAL) const;
     bool _execExplore(const std::wstring& file) const;

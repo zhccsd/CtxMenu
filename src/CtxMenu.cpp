@@ -357,7 +357,7 @@ bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& tex
     mii.cbSize = sizeof(MENUITEMINFOW);
     mii.fMask = MIIM_ID | MIIM_STATE | MIIM_STRING;
     mii.wID = idCmdFirst + idCmd;
-    mii.fState = MFS_ENABLED;
+    mii.fState = (DISABLE_IF_NOT_EXECUTABLE && actionItem.executable()) ? MFS_ENABLED : MFS_DISABLED;
     StringCchPrintfW(gInstance->GetPathBuffer(), gInstance->GetPathBufferSize(), text.c_str());
     mii.dwTypeData = gInstance->GetPathBuffer();
     mii.hbmpItem = _iconManager->getHBitmapFromPattern(actionItem.iconPattern());

@@ -68,6 +68,24 @@ std::wstring CtxMenuItem::iconPattern() const
     return std::wstring();
 }
 
+bool CtxMenuItem::executable() const
+{
+    ActionType actionType = this->actionType();
+    switch (actionType)
+    {
+    case Unknown:
+        return false;
+    case Open:
+    case Runas:
+    case Explore:
+        return _isFileParamExecutable();
+    case Copy:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool CtxMenuItem::execute() const
 {
     ActionType actionType = this->actionType();
@@ -148,6 +166,35 @@ bool CtxMenuItem::registerUserVariable(const std::wstring& name, const std::wstr
     }
     _userVariables[name] = value;
     return true;
+}
+
+bool CtxMenuItem::_isFileParamExecutable() const
+{
+    auto iterFile = _params.find(ACTION_PARAM_FILE);
+    if (iterFile == _params.end())
+    {
+        return false;
+    }
+    const std::wstring& file = iterFile->second;
+    if (file.empty())
+    {
+        return false;
+    }
+
+    // URL
+    size_t pos = file.find(L"://");
+    if (pos > 0 && pos != std::wstring::npos)
+    {
+        return true;
+    }
+
+    // \\server\path
+    if (file.find(L"\\\\") == 0)
+    {
+        return true;
+    }
+
+    return gInstance->IsPathExists(file);
 }
 
 bool CtxMenuItem::_execOpen(const std::wstring& file, const std::wstring& parameter, int show) const

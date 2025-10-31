@@ -6,6 +6,7 @@
 #define WINDOWS_CONTEXT_MENU_ENTRIES_MAX 10
 
 #define ENABLE_NESTED_USER_VARIABLES true
+#define DISABLE_IF_NOT_EXECUTABLE true
 
 enum class TargetType
 {

@@ -296,6 +296,16 @@ bool InstanceGlobal::IsDirectoryPath(const std::wstring& path) const
     return (attrs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+bool InstanceGlobal::IsPathExists(const std::wstring& path) const
+{
+    if (path.empty())
+    {
+        return false;
+    }
+    DWORD attrs = GetFileAttributesW(path.c_str());
+    return attrs != INVALID_FILE_ATTRIBUTES;
+}
+
 bool InstanceGlobal::CopyTextToClipboard(const std::wstring& text) const
 {
     if (text.empty())
