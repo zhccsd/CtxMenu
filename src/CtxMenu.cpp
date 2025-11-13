@@ -155,6 +155,9 @@ HMENU CtxMenu::_buildMenuFromXml(const std::wstring& xmlPath, UINT idCmdFirst, U
     case TargetType::SingleFile:
         menuElement = rootElement->FirstChildElement("file");
         break;
+    case TargetType::SingleDirectory:
+        menuElement = rootElement->FirstChildElement("directory");
+        break;
     default:
         break;
     }

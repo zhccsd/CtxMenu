@@ -24,7 +24,14 @@ public:
     static void log(std::format_string<ARGS...>&& s, ARGS&&... args)
     {
         auto originLog = std::format(s, std::forward<ARGS>(args)...);
-        _logImpl(std::forward<decltype(originLog)>(originLog));
+        _logImpl(originLog);
+    }
+
+    template<typename... ARGS>
+    static void log(std::wformat_string<ARGS...>&& s, ARGS&&... args)
+    {
+        auto originLog = std::format(s, std::forward<ARGS>(args)...);
+        _logImpl(originLog);
     }
 
 private:
