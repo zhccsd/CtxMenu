@@ -303,7 +303,23 @@ bool InstanceGlobal::IsPathExists(const std::wstring& path) const
         return false;
     }
     DWORD attrs = GetFileAttributesW(path.c_str());
-    return attrs != INVALID_FILE_ATTRIBUTES;
+    if (attrs != INVALID_FILE_ATTRIBUTES)
+    {
+        return true;
+    }
+    DWORD ret = SearchPathW(
+        NULL,
+        path.c_str(),
+        NULL,
+        0,
+        NULL,
+        NULL
+    );
+    if (ret > 0)
+    {
+        return true;
+    }
+    return false;
 }
 
 bool InstanceGlobal::CopyTextToClipboard(const std::wstring& text) const
