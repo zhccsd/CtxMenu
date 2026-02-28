@@ -87,13 +87,18 @@ STDMETHODIMP ContextMenuHandler::Initialize(
                 GlobalUnlock(stg.hGlobal);
             }
             ReleaseStgMedium(&stg);
-            if (selectedFiles.size() != 1)
+            TargetType type = _getTypeFromSelectedFiles(selectedFiles);
+            if (type == TargetType::Unknown)
             {
                 return E_FAIL;
             }
-            _ctxMenu->initialize(TargetType::SingleFile, selectedFiles);
+            if (!_ctxMenu->initialize(type, selectedFiles))
+            {
+                return E_FAIL;
+            }
+            return S_OK;
         }
-        return hr;
+        return E_FAIL;
     }
     return E_FAIL;
 }
@@ -176,4 +181,63 @@ STDMETHODIMP ContextMenuHandler::GetCommandString(
         return S_OK;
     }
     return E_FAIL;
+}
+
+TargetType ContextMenuHandler::_getTypeFromSelectedFiles(const std::vector<std::wstring>& selected)
+{
+    if (selected.size() <= 0)
+    {
+        return TargetType::Unknown;
+    }
+    else if (selected.size() == 1)
+    {
+        const std::wstring& file0 = selected[0];
+        if (gInstance->IsFilePath(file0))
+        {
+            return TargetType::SingleFile;
+        }
+        else if (gInstance->IsDirectoryPath(file0))
+        {
+            return TargetType::SingleDirectory;
+        }
+        else
+        {
+            return TargetType::Unknown;
+        }
+    }
+    else
+    {
+        bool hasFile = false;
+        bool hasDirectory = false;
+        for (const auto& f : selected)
+        {
+            if (gInstance->IsFilePath(f))
+            {
+                hasFile = true;
+                continue;
+            }
+            if (gInstance->IsDirectoryPath(f))
+            {
+                hasDirectory = true;
+                continue;
+            }
+            return TargetType::Unknown;
+        }
+        if (hasFile && hasDirectory)
+        {
+            return TargetType::MultiMixed;
+        }
+        else if (hasFile)
+        {
+            return TargetType::MultiFile;
+        }
+        else if (hasDirectory)
+        {
+            return TargetType::MultiDirectory;
+        }
+        else
+        {
+            return TargetType::Unknown;
+        }
+    }
 }

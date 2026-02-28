@@ -55,6 +55,7 @@ public:
     std::wstring GetFileNameFromPath(std::wstring path) const;
     bool IsFilePath(const std::wstring& path) const;
     bool IsDirectoryPath(const std::wstring& path) const;
+    bool IsPathExists(const std::wstring& path) const;
     bool CopyTextToClipboard(const std::wstring& text) const;
 
 private:

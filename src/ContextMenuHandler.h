@@ -39,6 +39,9 @@ public:
         UINT cchMax) override;
 
 private:
+    TargetType _getTypeFromSelectedFiles(const std::vector<std::wstring>& selected);
+
+private:
     ULONG _ref;
     std::unique_ptr<CtxMenu> _ctxMenu;
 };
