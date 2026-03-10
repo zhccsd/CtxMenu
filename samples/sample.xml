@@ -9,7 +9,7 @@
         <action text="open cmd(admin) here" type="runas" file="cmd.exe" parameter="/k cd /d ${CTXMENU_PWD}" icon="exeIcon:cmd.exe"/>
         <action text="my vcproject" type="open" file="just_for_test.sln" icon="exeIcon:$${VS2022_EXE_PATH}"/>
         <action text="cmake-gui" type="open" file="C:\Program Files\CMake\bin\cmake-gui.exe" parameter="-S ${CTXMENU_PWD} -B ${CTXMENU_PWD}\build"/>
-        <action text="open with vscode" type="open" file="$${VSCODE_PATH}" parameter="${CTXMENU_PWD}" icon="exeIcon:$${VSCODE_PATH}"/>
+        <action text="open with vscode" type="open" file="$${VSCODE_PATH}" parameter="-n &quot;${CTXMENU_PWD}&quot;" icon="exeIcon:$${VSCODE_PATH}"/>
         <separator/>
         <menu text="websites">
             <action text="google" type="open" file="https://www.google.com" icon="exeIcon:C:\Program Files\Google\Chrome\Application\chrome.exe"/>
@@ -27,6 +27,6 @@
         </menu>
     </file>
     <directory>
-        <action text="open with vscode" type="open" file="$${VSCODE_PATH}" parameter="${CTXMENU_PWD}" icon="exeIcon:$${VSCODE_PATH}"/>
+        <action text="open with vscode" type="open" file="$${VSCODE_PATH}" parameter="-n &quot;${CTXMENU_PWD}&quot;" icon="exeIcon:$${VSCODE_PATH}"/>
     </directory>
 </root>
