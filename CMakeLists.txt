@@ -78,14 +78,18 @@ set_target_properties(CtxMenuDLL PROPERTIES
 )
 
 install(TARGETS CtxMenuDLL
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION .
+)
+
+install(FILES
+    $<TARGET_PDB_FILE:CtxMenuDLL>
+    DESTINATION .
+    OPTIONAL
 )
 
 install(FILES
     scripts/install.bat
     scripts/uninstall.bat
     samples/sample.xml
-    DESTINATION bin
+    DESTINATION .
 )
