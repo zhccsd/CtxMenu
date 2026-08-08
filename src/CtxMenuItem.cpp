@@ -68,6 +68,16 @@ std::wstring CtxMenuItem::iconPattern() const
     return std::wstring();
 }
 
+std::wstring CtxMenuItem::filterPattern() const
+{
+    auto iter = _params.find("filter");
+    if (iter != _params.end() && !iter->second.empty())
+    {
+        return iter->second;
+    }
+    return std::wstring();
+}
+
 bool CtxMenuItem::executable() const
 {
     ActionType actionType = this->actionType();

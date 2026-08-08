@@ -20,10 +20,14 @@
             <action text="LOCALAPPDATA" type="open" file="%LOCALAPPDATA%" icon="exeIcon:imageres.dll@-1023"/>
             <action text="APPDATA" type="open" file="%APPDATA%" icon="exeIcon:explorer.exe"/>
         </menu>
+        <menu text="Qt5.15.2_mingw81_x64">
+            <action text="qtenv2" type="open" file="cmd.exe" parameter="/k $${QT5.15.2_MINGW81_X64_PATH}\qtenv2.bat && cd /d ${CTXMENU_PWD}"/>
+        </menu>
     </background>
     <file>
-        <menu text="windeployqt">
-            <action text="5.15.2mingw81_x64" type="open" file="cmd.exe" parameter="/c $${QT5.15.2_MINGW81_X64_PATH}\qtenv2.bat && $${QT5.15.2_MINGW81_X64_PATH}\windeployqt.exe ${CTXMENU_FILE_0}"/>
+        <menu text="Qt5.15.2_mingw81_x64">
+            <action filter="ext:exe,dll" text="windeployqt" type="open" file="cmd.exe" parameter="/c $${QT5.15.2_MINGW81_X64_PATH}\qtenv2.bat && $${QT5.15.2_MINGW81_X64_PATH}\windeployqt.exe ${CTXMENU_FILE_0}"/>
+            <action filter="ext:ts" text="lrelease" type="open" file="cmd.exe" parameter="/c $${QT5.15.2_MINGW81_X64_PATH}\qtenv2.bat && $${QT5.15.2_MINGW81_X64_PATH}\lrelease.exe ${CTXMENU_FILE_0}"/>
         </menu>
     </file>
     <directory>

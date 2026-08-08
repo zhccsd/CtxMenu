@@ -239,6 +239,12 @@ int InstanceGlobal::StringReplace(std::wstring& str, const std::wstring& oldValu
     return replacement;
 }
 
+void InstanceGlobal::StringToLower(std::wstring& str) const
+{
+    std::transform(str.begin(), str.end(), str.begin(),
+        [](wchar_t c) { return static_cast<wchar_t>(std::tolower(c)); });
+}
+
 std::wstring InstanceGlobal::GetFileNameFromPath(std::wstring path) const
 {
     if (path.empty())

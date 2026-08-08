@@ -5,13 +5,16 @@
 ContextMenuHandler::ContextMenuHandler()
     : _ref(1)
 {
-    try
+    if (gInstance->GetPathBuffer(false))
     {
-        _ctxMenu = std::make_unique<CtxMenu>();
-    }
-    catch (const std::bad_alloc&)
-    {
-        _ctxMenu.reset();
+        try
+        {
+            _ctxMenu = std::make_unique<CtxMenu>();
+        }
+        catch (const std::bad_alloc&)
+        {
+            _ctxMenu.reset();
+        }
     }
     gInstance->AddRef();
 }
