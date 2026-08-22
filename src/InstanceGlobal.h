@@ -55,6 +55,7 @@ public:
     int StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const;
     void StringToLower(std::wstring& str) const;
     std::wstring GetFileNameFromPath(std::wstring path) const;
+    std::wstring GetFolderPath(const std::wstring& path) const;
     bool IsFilePath(const std::wstring& path) const;
     bool IsDirectoryPath(const std::wstring& path) const;
     bool IsPathExists(const std::wstring& path) const;

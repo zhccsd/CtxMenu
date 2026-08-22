@@ -79,18 +79,6 @@ bool IconManager::_cacheExeIcon(const std::wstring& pattern)
     {
         iconIndex = 0;
     }
-    if (iconIndex < 0)
-    {
-        /*
-        * from MS Learn:
-        * If this value is a negative number and either phiconLarge or phiconSmall is not NULL,
-        * the function begins by extracting the icon whose resource identifier is equal to the absolute value of nIconIndex.
-        * For example, use -3 to extract the icon whose resource identifier is 3.
-        * 
-        * so negative index is ok, and makes it even easier to find icons in shell32.dll and imageres.dll
-        */
-        //iconIndex = 0;
-    }
     HICON hSmallIcon = NULL;
     ExtractIconExW(exePath.c_str(), iconIndex, NULL, &hSmallIcon, 1);
     if (!hSmallIcon)

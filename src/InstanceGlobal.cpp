@@ -274,6 +274,16 @@ std::wstring InstanceGlobal::GetFileNameFromPath(std::wstring path) const
     return path;
 }
 
+std::wstring InstanceGlobal::GetFolderPath(const std::wstring& path) const
+{
+    size_t pos = path.find_last_of(L"\\/");
+    if (pos == std::string::npos)
+    {
+        return L".";
+    }
+    return path.substr(0, pos);
+}
+
 bool InstanceGlobal::IsFilePath(const std::wstring& path) const
 {
     if (path.empty())
