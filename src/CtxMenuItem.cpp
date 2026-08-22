@@ -68,6 +68,16 @@ std::wstring CtxMenuItem::iconPattern() const
     return std::wstring();
 }
 
+std::wstring CtxMenuItem::filterPattern() const
+{
+    auto iter = _params.find("filter");
+    if (iter != _params.end() && !iter->second.empty())
+    {
+        return iter->second;
+    }
+    return std::wstring();
+}
+
 bool CtxMenuItem::executable() const
 {
     ActionType actionType = this->actionType();
@@ -296,14 +306,24 @@ void CtxMenuItem::_replaceCtxMenuVariables(std::wstring& str, TargetType targetT
 {
     gInstance->StringReplace(str, L"${CTXMENU_HOME_PATH}", gInstance->GetDllDirPath());
     gInstance->StringReplace(str, L"${CTXMENU_CONFIG_PATH}", gInstance->GetConfigDirPath());
-    if (targetType == TargetType::DirectoryBackground || targetType == TargetType::SingleDirectory)
+    gInstance->StringReplace(str, L"${CTXMENU_DLL_PATH}", gInstance->GetDllPath());
+
+    if (targetType == TargetType::DirectoryBackground)
     {
         if (!selections.empty())
         {
             gInstance->StringReplace(str, L"${CTXMENU_PWD}", selections[0]);
         }
     }
-    gInstance->StringReplace(str, L"${CTXMENU_DLL_PATH}", gInstance->GetDllPath());
+    else if (targetType == TargetType::SingleFile || targetType == TargetType::SingleDirectory)
+    {
+        if (!selections.empty())
+        {
+            std::wstring pwd = gInstance->GetFolderPath(selections[0]);
+            gInstance->StringReplace(str, L"${CTXMENU_PWD}", pwd);
+        }
+    }
+
     for (int i = 0; i < selections.size(); ++i)
     {
         gInstance->StringReplace(str, L"${CTXMENU_FILE_" + std::to_wstring(i) + L"}", selections[i]);

@@ -295,6 +295,13 @@ UINT CtxMenu::_parseMenu(HMENU hRootMenu, UINT idCmdFirst, UINT idCmdLast, WORD&
             {
                 continue;
             }
+            if (_targetType == TargetType::SingleFile || _targetType == TargetType::SingleDirectory)
+            {
+                if (!_filterItem(actionItem, _selections[0]))
+                {
+                    continue;
+                }
+            }
             const char* textAttr = element->Attribute("text");
             std::wstring text = textAttr ? gInstance->Utf8ToUtf16(textAttr) : L"";
             if (text.empty())
@@ -373,5 +380,59 @@ bool CtxMenu::_insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& tex
         return false;
     }
     _actions.emplace(idCmd, actionItem);
+    return true;
+}
+
+bool CtxMenu::_filterItem(const CtxMenuItem& item, std::wstring file) const
+{
+    std::wstring filterPattern = item.filterPattern();
+    if (filterPattern.empty())
+    {
+        return true;
+    }
+
+    // ext:
+    const std::wstring extPrefix = L"ext:";
+    if (filterPattern.find(extPrefix, 0) == 0)
+    {
+        gInstance->StringToLower(file);
+        std::wstring extPattern = filterPattern.substr(extPrefix.size());
+        extPattern.push_back(L'|');
+        std::set<wchar_t> seperators = {L' ', L',', L'|'};
+        std::wstring ext;
+        for (const auto& c : std::as_const(extPattern))
+        {
+            if (ext.empty())
+            {
+                ext.push_back(L'.');
+            }
+            if (c > L'|')
+            {
+                ext.push_back(c);
+                continue;
+            }
+            if (seperators.contains(c))
+            {
+                if (ext.size() > 1)
+                {
+                    if (file.ends_with(ext))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        ext.clear();
+                        continue;
+                    }
+                }
+            }
+            else
+            {
+                ext.push_back(static_cast<wchar_t>(std::tolower(static_cast<int>(c))));
+            }
+        }
+        return false;
+    }
+
     return true;
 }

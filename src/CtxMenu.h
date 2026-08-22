@@ -26,6 +26,7 @@ private:
     void _insertSeparator(HMENU hMenu, UINT indexMenu);
     bool _insertMenu(HMENU hMenu, UINT indexMenu, const std::wstring& text, const std::wstring& iconPattern, HMENU* subMenu);
     bool _insertAction(HMENU hMenu, UINT indexMenu, const std::wstring& text, UINT idCmdFirst, WORD idCmd, const CtxMenuItem& actionItem);
+    bool _filterItem(const CtxMenuItem& item, std::wstring file) const;
 
 private:
     TargetType _targetType = TargetType::Unknown;

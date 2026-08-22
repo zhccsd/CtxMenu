@@ -24,6 +24,7 @@ public:
     static CtxMenuItem parseFromXmlElement(tinyxml2::XMLElement* element, TargetType targetType, const std::vector<std::wstring>& selections);
     ActionType actionType() const;
     std::wstring iconPattern() const;
+    std::wstring filterPattern() const;
     bool executable() const;
     bool execute() const;
     static bool registerUserVariable(const std::wstring& name, const std::wstring& value);

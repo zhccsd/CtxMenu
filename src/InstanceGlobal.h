@@ -14,6 +14,7 @@
 #include <map>
 #include <set>
 #include <functional>
+#include <algorithm>
 #include "GlobalDef.h"
 #include "Logger.h"
 
@@ -52,7 +53,9 @@ public:
     std::wstring Utf8ToUtf16(const std::string& str) const;
     std::string Utf16ToUtf8(const std::wstring& str) const;
     int StringReplace(std::wstring& str, const std::wstring& oldValue, const std::wstring& newValue) const;
+    void StringToLower(std::wstring& str) const;
     std::wstring GetFileNameFromPath(std::wstring path) const;
+    std::wstring GetFolderPath(const std::wstring& path) const;
     bool IsFilePath(const std::wstring& path) const;
     bool IsDirectoryPath(const std::wstring& path) const;
     bool IsPathExists(const std::wstring& path) const;

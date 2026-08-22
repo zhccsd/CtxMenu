@@ -239,6 +239,12 @@ int InstanceGlobal::StringReplace(std::wstring& str, const std::wstring& oldValu
     return replacement;
 }
 
+void InstanceGlobal::StringToLower(std::wstring& str) const
+{
+    std::transform(str.begin(), str.end(), str.begin(),
+        [](wchar_t c) { return static_cast<wchar_t>(std::tolower(c)); });
+}
+
 std::wstring InstanceGlobal::GetFileNameFromPath(std::wstring path) const
 {
     if (path.empty())
@@ -266,6 +272,16 @@ std::wstring InstanceGlobal::GetFileNameFromPath(std::wstring path) const
         path.erase(pos);
     }
     return path;
+}
+
+std::wstring InstanceGlobal::GetFolderPath(const std::wstring& path) const
+{
+    size_t pos = path.find_last_of(L"\\/");
+    if (pos == std::string::npos)
+    {
+        return L".";
+    }
+    return path.substr(0, pos);
 }
 
 bool InstanceGlobal::IsFilePath(const std::wstring& path) const
