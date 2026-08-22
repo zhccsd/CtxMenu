@@ -54,7 +54,10 @@ To see the full list of available environment variables, run `set` in the Comman
 
 ### Built-in Variables
 
-CtxMenu provides several built-in variables for convenience:
+CtxMenu provides several built-in variables for convenience. They can be used in any string attribute of the `<action>` tag and are replaced automatically when the menu is loaded. All variables are case-sensitive.
+
 - `${CTXMENU_HOME_PATH}` — The directory containing the currently loaded `CtxMenu.dll` (as loaded by `explorer.exe`).
-- `${CTXMENU_CONFIG_PATH}` — The directory where CtxMenu looks for XML configuration files.
-- `${CTXMENU_PWD}` — The current directory where the context menu was opened. Available only when right-clicking on a directory background or a single directory.
+- `${CTXMENU_DLL_PATH}` — The full path of the currently loaded `CtxMenu.dll` (as loaded by `explorer.exe`).
+- `${CTXMENU_CONFIG_PATH}` — The directory where CtxMenu looks for XML configuration files (currently the same as the DLL directory).
+- `${CTXMENU_PWD}` — The current directory where the context menu was opened. When right-clicking a directory's background, this is the directory itself; when right-clicking a single file or directory, this is the parent directory of the selected item.
+- `${CTXMENU_FILE_0}`, `${CTXMENU_FILE_1}`, ... — The full paths of the selected items (files or directories), numbered starting from `0` in selection order.
